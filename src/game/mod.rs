@@ -1,26 +1,19 @@
 use bevy::prelude::*;
 
+pub mod camera;
 pub mod interactable;
-pub mod messages;
-pub mod items;
-pub mod ice_cream;
-pub mod inventory;
-pub mod scene;
+pub mod hand;
+pub mod states;
+pub mod rooms;
+pub mod item;
 
-pub use interactable::*;
-pub use messages::*;
-pub use items::*;
-pub use ice_cream::*;
-pub use inventory::*;
-pub use scene::*;
-
-pub struct GamePlugins;
-
-impl Plugin for GamePlugins {
+pub struct GamePlugin;
+impl Plugin for GamePlugin{
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            messages::MessagesPlugin,
-            interactable::InteractionPlugin,
+            hand::HandPlugin,
+            camera::CameraPlugin,
+            rooms::RoomPlugin,
         ));
     }
 }
