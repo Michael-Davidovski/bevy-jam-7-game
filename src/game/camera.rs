@@ -32,6 +32,6 @@ fn move_camera(
     let target_y = room_manager.current_room_pos.y as f32 * ROOM_SIZE.y;
     let target_pos = Vec3::new(target_x, target_y, camera_transform.translation.z);
 
-    camera_transform.translation = camera_transform.translation.lerp(target_pos, time.delta_secs() * 10.0);
+    camera_transform.translation = camera_transform.translation.lerp(target_pos, time.delta_secs() * 5.0);
 
 }

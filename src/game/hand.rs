@@ -7,18 +7,22 @@ pub struct HandPlugin;
 impl Plugin for HandPlugin{
     fn build(&self, app: &mut App) {
         app
+        .configure_sets(Update, HandUpdateSet)
         .add_systems(Startup, setup_hand)
-        .add_systems(Update, (handle_interaction, handle_grabbing))
+        .add_systems(Update, handle_grabbing.in_set(HandUpdateSet))
         .add_systems(PostUpdate, handle_movement)
         ;
     }
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct HandUpdateSet;
+
 #[derive(Component)]
-struct Hand {
-    is_grabbing: bool,
-    grab_joint_entity: Option<Entity>,
-    grabbed_body: Option<Entity>,
+pub struct Hand {
+    pub is_grabbing: bool,
+    pub grab_joint_entity: Option<Entity>,
+    pub grabbed_body: Option<Entity>,
 }
 
 fn setup_hand(
@@ -57,39 +61,6 @@ fn handle_movement(
         }
     }
 
-}
-
-fn handle_interaction(
-    mut cmds: Commands,
-    rapier_context: ReadRapierContext,
-    mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut hand_q: Query<(Entity, &mut Hand, &Transform)>,
-    interactable_query: Query<(Entity, &Interactable, &Transform, Option<&RigidBody>), With<Collider>>,
-){
-    let rapier_context = rapier_context.single().unwrap();
-    let Ok((hand_entity, mut hand, hand_transform,)) = hand_q.single_mut() else {return};
-
-    if mouse_buttons.just_pressed(MouseButton::Left) {
-        rapier_context.intersect_shape(
-            hand_transform.translation.truncate(), 
-            0.0, 
-            Collider::ball(5.0).raw.make_mut(), 
-            QueryFilter::default(),
-            | entity| {
-                if hand_entity == entity{return true;}
-
-                if let Ok((interacable_entity, interactable, interacable_transform, rigidbody)) = interactable_query.get(entity) {
-                    match interactable.interaction_type {
-                        _ => {}
-                    }
-                }
-                
-                return false;
-            }
-        );
-    }
-    if mouse_buttons.just_released(MouseButton::Left){
-    }
 }
 
 fn handle_grabbing(

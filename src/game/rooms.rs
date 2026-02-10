@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use bevy::{input::keyboard::KeyboardInput, prelude::*};
 use bevy_rapier2d::prelude::*;
 
-use crate::game::interactable::Interactable;
+use crate::game::{interactable::{Interactable, InteractionType}, item::{Item, ItemCatalog, ItemSetupSet, spawn_item}, machine::spawn_machine, spawner::spawn_item_spawner};
 
 pub struct RoomPlugin;
 impl Plugin for RoomPlugin{
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, (
-            setup_rooms,
+            setup_rooms.after(ItemSetupSet),
             place_ground_walls_ceiling.after(setup_rooms)
         ));
         app.add_systems(Update, move_between_rooms);
@@ -40,6 +40,7 @@ impl RoomManager{
 
 #[derive(Component)]
 struct Room{
+    locked: bool,
     colliders: Vec<RoomCollider>
 }
 
@@ -52,33 +53,41 @@ enum RoomCollider{
 
 
 fn setup_rooms(
-    mut cmds: Commands
+    mut cmds: Commands,
+    item_catalog: Res<ItemCatalog>
 ){
     let mut rooms = HashMap::<IVec2, Entity>::new();
 
-    let ice_cream_room = cmds.spawn((
-        Room {colliders: vec![RoomCollider::Ground, RoomCollider::WallRight, RoomCollider::Ceiling]},
+    let kitchen_room = cmds.spawn((
+        Room {locked: false, colliders: vec![RoomCollider::Ground, RoomCollider::Ceiling]},
         Transform::from_xyz(0.0, 0.0, -10.0),
         Sprite::from_color(Color::linear_rgb(0.3, 0.0, 0.0), ROOM_SIZE),
     )).id();
-    rooms.insert(ivec2(0, 0), ice_cream_room);
-
-    cmds.spawn((
-        Interactable::new_item(),
-        Transform::from_xyz(0.0, 0.0, 0.0),
-        Sprite::from_color(Color::linear_rgb(0.5, 0.5, 0.0), vec2(32.0, 32.0)),
-        // Sprite::from_image(asset_server.load("ducky.png")),
-        RigidBody::Dynamic,
-        Collider::cuboid(16.0, 16.0),
-    ));
-
+    rooms.insert(ivec2(0, 0), kitchen_room);
     
     let counter_room = cmds.spawn((
-        Room {colliders: vec![RoomCollider::Ground, RoomCollider::WallLeft, RoomCollider::Ceiling]},
+        Room {locked: false, colliders: vec![RoomCollider::Ground, RoomCollider::WallLeft, RoomCollider::Ceiling]},
         Transform::from_xyz( -ROOM_SIZE.x, 0.0, -10.0),
         Sprite::from_color(Color::linear_rgb(0.0, 0.3, 0.0), ROOM_SIZE),
     )).id();
     rooms.insert(ivec2(-1, 0), counter_room);
+
+    let dispencer_room = cmds.spawn((
+        Room {locked: false, colliders: vec![RoomCollider::Ground, RoomCollider::WallRight, RoomCollider::Ceiling]},
+        Transform::from_xyz( ROOM_SIZE.x, 0.0, -10.0),
+        Sprite::from_color(Color::linear_rgb(0.0, 0.3, 0.0), ROOM_SIZE),
+    )).id();
+    rooms.insert(ivec2(1, 0), dispencer_room);
+
+    let item_spawner = spawn_item_spawner(
+        &mut cmds, 
+        vec2(ROOM_SIZE.x, ROOM_SIZE.y/3.0), 
+        vec!["red".to_string(),"green".to_string(),"blue".to_string()], 
+        vec2(0.0, -128.0)
+    );
+
+    spawn_machine(&mut cmds, vec2(ROOM_SIZE.x/3.0, 16.0));
+    // spawn_item(&mut cmds, &item_catalog, vec2(ROOM_SIZE.x, 0.0), "yellow".to_string());
 
     cmds.insert_resource(RoomManager{
         current_room_pos: ivec2(0, 0),
@@ -137,11 +146,10 @@ fn move_between_rooms(
     if keyboard.just_pressed(KeyCode::KeyD){
         room_manager.try_moving(ivec2(1, 0));
     }
-    // if keyboard.just_pressed(KeyCode::KeyW){
-    //     room_manager.try_moving(ivec2(0, 1));
-    // }
-    // if keyboard.just_pressed(KeyCode::KeyS){
-    //     room_manager.try_moving(ivec2(0, -1));
-    // }
+    if keyboard.just_pressed(KeyCode::KeyW){
+        room_manager.try_moving(ivec2(0, 1));
+    }
+    if keyboard.just_pressed(KeyCode::KeyS){
+        room_manager.try_moving(ivec2(0, -1));
+    }
 }
-

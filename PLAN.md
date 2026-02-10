@@ -14,14 +14,16 @@ rest time is planed for bug fixes I hope
 
 
 ## minimum viable product
-[ ] scene manager
-[ ] min 3 scenes
-    [ ] Elevator
-    [ ] Ice cream parlor
-    [ ] Outside
+[x] camera
+[x] hand
+[ ] washing machiene + hammer
+[ ] items(min 10)
+[ ] item dispencer
+[ ] recepies (min 10)
+[ ] npc
+    [ ] slaping
+    [ ] quests
+    [ ] rewards
 
-[ ] interaction system
-[ ] dialog system
-[ ] inventory
-[ ] Menus
-[ ] NPCs
+
+
